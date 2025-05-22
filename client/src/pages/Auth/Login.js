@@ -42,16 +42,17 @@ const Login = () => {
     }
   };
 
+  //Google Login 
   const handleGoogleLogin = async (credentialResponse) => {
     try {
       const decodedToken = jwtDecode(credentialResponse.credential);
 
-      const res = await axios.post("/api/v1/auth/google-login", { 
+      const res = await axios.post("/api/v1/auth/google-login", {
         token: credentialResponse.credential,
       });
 
       if (res && res.data.success) {
-            toast.success(res.data.message); 
+        toast.success(res.data.message);
 
         setAuth({
           ...auth,
@@ -61,7 +62,7 @@ const Login = () => {
         localStorage.setItem("auth", JSON.stringify(res.data));
         navigate(location.state || "/");
       } else {
-            toast.error(res.data.message); 
+        toast.error(res.data.message);
 
       }
     } catch (error) {
@@ -107,17 +108,14 @@ const Login = () => {
                 Forgot Password
               </button>
             </div>
-
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn mb-3 btn-primary">
               LOGIN
             </button>
+            <GoogleLogin
+              onSuccess={handleGoogleLogin}
+              onError={() => toast.error("Google login failed")}
+            />
           </form>
-
-         
-          <GoogleLogin
-            onSuccess={handleGoogleLogin}
-            onError={() => toast.error("Google login failed")}
-          />
         </div>
       </Layout>
     </GoogleOAuthProvider>

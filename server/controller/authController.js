@@ -6,112 +6,107 @@ import JWT from "jsonwebtoken";
 
 const googleClient = new OAuth2Client(process.env.REACT_APP_GOOGLE_CLIENT_ID);
 
+export const registerController = async (req, res) => {
+  const { username, email, password, phone, address, answer } = req.body;
 
-export const registerController=async(req, res)=>{
+  if (!username || !email || !phone || !address || !password || !answer) {
+    return res.status(422).json({ success: false, message: "Please fill all fields" });
+  }
 
+  try {
+    const userExist = await usermodel.findOne({ email });
+    if (userExist) {
+      return res.status(422).json({ success: false, message: "Email already exists" });
+    }
 
- const { username, email, password, phone, address, answer }=req.body;
+    const hashedPassword = await hashPassword(password);
 
- if(!username || !email || !phone || !address||!password || !answer )
-     {
-      
-      return res.status(422).json({error:"plz fill all filled"});
-     }
+    const user = new usermodel({
+      username,
+      email,
+      password: hashedPassword,
+      phone,
+      address,
+      answer,
+    });
 
-
-     
-   try{
-  //    const useExist=await usermodel.findOne({ email:email })
-  //   if(useExist){
-  //       return res.status(422).json({error:"email already Exist"});
-  //  }
- 
-  //    const hashedPassword = await hashPassword(password);
-   const user=new usermodel({ username, email, password,
-     phone, address, answer });
-
-   const userregister=await user.save();
-   if(userregister)
-   {
-    res.status(201).json({ message:"user registered successfuly" });
-   
-   
-     }
-       
-    
-    }catch(err){
-        console.log(err);
-     }
-    
-   
+    const userRegister = await user.save();
+    if (userRegister) {
+      return res.status(201).json({ success: true, message: "User registered successfully" });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
 };
+
 
 
 
 
 //POST LOGIN
 export const loginController = async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      //validation
-      if (!email || !password) {
-        return res.status(400).send({
-          success: false,
-          message: "Email and password are required",
-        });
-      }
-
-      //check user
-      const user = await usermodel.findOne({ email });
-      if (!user) {
-        return res.status(401).send({
-          success: false,
-          message: "User not found with this email",
-        });
-      }
-
-      const match = await comparePassword(password, user.password);
-      if (!match) {
-        return res.status(401).send({
-          success: false,
-          message: "Incorrect password",
-        });
-      }
-
-      // // //token
-    const token = JWT.sign({ _id: user._id }, 
-
-        process.env.JWT_SECRET, {
-        expiresIn: "7d",
-      });
-
-      console.log(token);
-      res.status(200).send({
-        success: true,
-        message: "login successfully",
-        user: {
-          _id: user._id,
-         username: user.username,
-          email: user.email,
-          phone: user.phone,
-        address: user.address,
-          role: user.role,
-         },
-        token,
-        });
-    } catch (error) {
-      console.log(error);
-      res.status(500).send({
+  try {
+    const { email, password } = req.body;
+    //validation
+    if (!email || !password) {
+      return res.status(400).send({
         success: false,
-        message: "Error in login",
-        error,
+        message: "Email and password are required",
       });
     }
-  };
-  
+
+    //check user
+    const user = await usermodel.findOne({ email });
+    if (!user) {
+      return res.status(401).send({
+        success: false,
+        message: "User not found with this email",
+      });
+    }
+
+    const match = await comparePassword(password, user.password);
+    if (!match) {
+      return res.status(401).send({
+        success: false,
+        message: "Incorrect password",
+      });
+    }
+
+    // // //token
+    const token = JWT.sign({ _id: user._id },
+
+      process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    console.log(token);
+    res.status(200).send({
+      success: true,
+      message: "Login successfully",
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        address: user.address,
+        role: user.role,
+      },
+      token,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in login",
+      error,
+    });
+  }
+};
 
 
-  //test controller
+
+//test controller
 export const testController = (req, res) => {
   try {
     res.send("Protected Routes");
@@ -124,32 +119,32 @@ export const testController = (req, res) => {
 // Google Login Controller
 export const googleLoginController = async (req, res) => {
   try {
-    const { token } = req.body; 
+    const { token } = req.body;
 
-    
+
     // Verify Google token
-    const ticket = await googleClient.verifyIdToken({ 
+    const ticket = await googleClient.verifyIdToken({
 
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
-    
+
     const payload = ticket.getPayload();
     const { email, name, picture } = payload;
 
     // Check if user exists
     let user = await usermodel.findOne({ email });
-    
-    if (!user) { 
+
+    if (!user) {
       // Create new user if doesn't exist
-      user = await usermodel.create({ 
-        username: name, 
-        email, 
-        profilePhoto: picture, 
-        password: '', 
-        role: 0, 
+      user = await usermodel.create({
+        username: name,
+        email,
+        profilePhoto: picture,
+        password: '',
+        role: 0,
       });
-    } 
+    }
 
 
     // Generate JWT token
@@ -315,18 +310,18 @@ export const orderStatusController = async (req, res) => {
 //get all users
 export const getAllUsersController = async (req, res) => {
   try {
-      const users = await usermodel.find({});
-      res.status(200).send({
-          success: true,
-          message: "All Users",
-          users,
-      });
+    const users = await usermodel.find({});
+    res.status(200).send({
+      success: true,
+      message: "All Users",
+      users,
+    });
   } catch (error) {
-      console.log(error);
-      res.status(500).send({
-          success: false,
-          error,
-          message: "Error in getting all Users",
-      })
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      error,
+      message: "Error in getting all Users",
+    })
   }
 };
