@@ -1,5 +1,14 @@
 {
   "type": "module",
+  "name": "emall-server",
+  "version": "1.0.0",
+  "description": "E-Mall E-commerce Backend Server",
+  "main": "server/app.js",
+  "scripts": {
+    "start": "node server/app.js",
+    "dev": "nodemon server/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "dependencies": {
     "@vercel/speed-insights": "^1.2.0",
     "bcrypt": "^5.1.1",
