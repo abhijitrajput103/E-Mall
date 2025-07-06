@@ -1,0 +1,40 @@
+services:
+  # Backend API Service
+  - type: web
+    name: emall-backend
+    env: node
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: MONGO_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: BRAINTREE_MERCHANT_ID
+        sync: false
+      - key: BRAINTREE_PUBLIC_KEY
+        sync: false
+      - key: BRAINTREE_PRIVATE_KEY
+        sync: false
+      - key: REACT_APP_GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+
+  # Frontend React App
+  - type: web
+    name: emall-frontend
+    env: static
+    plan: free
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: ./client/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://emall-backend.onrender.com
+      - key: REACT_APP_GOOGLE_CLIENT_ID
+        sync: false 
